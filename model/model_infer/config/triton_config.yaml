@@ -1,0 +1,37 @@
+url: '127.0.0.1:8001'
+model_info:
+  scsmodel:
+    input: 'images'
+    output: ['output0','output1']
+#    output: 'output0'
+    size : [640,640]
+    labels: ["worker","excavator","loader","dumptruck","truckcrane","crawlercrane",
+            "concretemixertruck","pumptruck","trailerpump","passengervehicle","rider","boxtruck","towercrane",
+            "roller","elevator","pc","pctruck","mixer","lighttruck","dozer","forklift","steel","pipe","panel","person"]
+
+  fastreid:
+    input: 'images'
+    output: 'output'
+    size: [128, 256]
+    labels: 0
+
+  safetymodel:
+    input: 'images'
+    output: 'output0'
+    size: [640,640]
+    labels: ['person','mineLamp','helmet','towel','mask','workClothes','portable','belt','rescuer','card','gloves','boots','nohelmet']
+  yanhuomodel:
+    input: 'images'
+    output: 'output0'
+    size: [640,640]
+    labels: ['smoke','fire']
+  fencemodel:
+    input: 'images'
+    output: 'output0'
+    size: [ 640,640 ]
+    labels: [ 'pit','fence' ]
+  steelcount:
+    input: 'images'
+    output0: 'output0'
+    size: [ 640,640 ]
+    labels: [ 'rebar' ]

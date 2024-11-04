@@ -1,0 +1,1 @@
+from algrithom.algyanhuo import YanhuoAlgThread
