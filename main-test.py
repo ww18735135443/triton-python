@@ -8,39 +8,42 @@ from model.model_infer.tools.parser import get_config,load_config_from_file
 import cv2
 import os
 
-fps=25
+
 def decode(srcQueue, url):
     cap = cv2.VideoCapture()
+    fps = cap.get(cv2.CAP_PROP_FPS)
     cap.open(url)
-    global fps
-    fps= cap.get(cv2.CAP_PROP_FPS)
-
-    count = 1
+    i = 0
     while cap.grab():
         _, ori_im = cap.retrieve()
-        if count % 5 != 0:
-            count += 1
-            continue
         srcQueue.put(ori_im)
-
+        i += 1
+        # print(i)
 
 
 def vas(srcQueue, picQueue):
     cam_id = ''
+    count = 1
+    fps = 25
     timestamp = time.time()
-    time_freq = 1 / fps*5
-    count=0
+    start_timestamp = timestamp
+    time_freq = 1 / fps
     while True:
-        count += 1
         timestamp += time_freq
         frame = srcQueue.get()
+        # if count % 5 != 0:
+        #     count += 1
+        #     continue
         msg_format = {"picture": frame, "camera_id": cam_id, "timestamp": timestamp, "frame_number": count}
+        # if int(timestamp - start_timestamp) % 10 == 0 and count % 25 == 0:
+        #     print('passed {} seconds'.format(int(timestamp - start_timestamp)))
+        count += 1
         picQueue.put(msg_format)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='./config/helmet_algo_config.yaml', help='config path')
+    parser.add_argument('--cfg', type=str, default='./config/mechine_algo_config.yaml', help='config path')
     # parser.add_argument('--algtype', type=str, default='yanhuodetect', help='')
     opt = parser.parse_args()
     paramdic = get_config()
@@ -71,6 +74,9 @@ if __name__ == '__main__':
     elif paramdic.algorithmType=='crosslinedetect':
         paramdic["model_name"] = 'scsmodel'
         algorithm = CrosslineAlgThread
+    elif paramdic.algorithmType=='mechinedetect':
+        paramdic["model_name"] = 'scsmodel'
+        algorithm = MechineAlgThread
     else:
         print('À„∑®¿‡–Õ◊÷∂Œ¥ÌŒÛ')
     resQueue = queue.Queue(maxsize=500)

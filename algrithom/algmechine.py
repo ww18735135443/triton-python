@@ -3,7 +3,7 @@ from algrithom.tool.common import read_areas
 from algrithom.tool.logic import WarnLogic
 from algrithom.tool.logger import get_logger
 from algrithom.tool.msgApp import msgApp
-from model.model_infer.yolov5det_triton_infer import YoloV5TritonDetector
+from model.model_infer.yolov8seg_triton_infer import YoloV8segTritonDetector
 from model.model_infer.tools.parser import get_config
 from algrithom.tool.draw import draw_areas,draw_detections
 from shapely.geometry import Polygon,Point,LineString
@@ -117,7 +117,7 @@ def result_process(warn_detect,frame,param,warn_flag,timestamp):
     msg["image"]=frame
     msg["warnflag"]=warn_flag
     return msg
-class YanhuoAlgThread(threading.Thread):
+class MechineAlgThread(threading.Thread):
     def __init__(self,param):
         threading.Thread.__init__(self)
         self.param = param
@@ -148,16 +148,16 @@ class YanhuoAlgThread(threading.Thread):
             # self.msgapp.save_path=os.path.join(param['save']['path'],param['topic'])
             self.save_path=os.path.join(param['save']['path'],param['topic'])
             self.msgapp.register_callback(self.savemsg)
-        self.detector =YoloV5TritonDetector(param.model_name,self.detect_cfg)
+        self.detector =YoloV8segTritonDetector(param.model_name,self.detect_cfg)
         self.logger.info('检测模型加载成功')
         self.trackmodel = TRACKER_MAP[param["trackerType"]](self.tracker_cfg,frame_rate=30)
-        self.logger.info('烟火检测算法线程初始化成功！')
+        self.logger.info('安全帽佩戴检测算法线程初始化成功！')
         self.logic=AlgrithmLogic(self.alarm_config)
         targets = [self.run]
         for target in targets:
             curThread = threading.Thread(target=target, args=(), daemon=True)
             curThread.start()
-        self.logger.info('烟火检测算法线程启动成功')
+        self.logger.info('安全帽佩戴检测算法线程启动成功')
     def sendkafkamsg(self,msg):
         if self.msgapp.kafka_send:
             msg["image"]=base64.b64encode(msg["image"]).decode('utf-8')
@@ -167,21 +167,25 @@ class YanhuoAlgThread(threading.Thread):
 
             future = self.msgapp.producer.send(topic_name, msg)
             # 尝试获取发送结果，同时处理可能的异常
+            try:
+                # 等待消息发送完成（或直到超时），这里假设超时时间为60秒
+                result = future.get(timeout=10)
+                self.logger.info(f'Message sent to {result.topic} [{result.partition}] offset {result.offset}')
+                self.logger.info("发送kafka消息成功")
+            except Exception as e:
+                # 处理发送过程中出现的异常
+                self.logger.info(f'Failed to send message: {e}')
         else:
             self.logger.info('kafka server can not use')
-        try:
-            # 等待消息发送完成（或直到超时），这里假设超时时间为60秒
-            result = future.get(timeout=10)
-            self.logger.info(f'Message sent to {result.topic} [{result.partition}] offset {result.offset}')
-        except Exception as e:
-            # 处理发送过程中出现的异常
-            self.logger.info(f'Failed to send message: {e}')
-        self.logger.info("发送消息成功")
+
+
     def savemsg(self,msg):
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
         save_path=os.path.join(self.save_path,'{}.jpg'.format(msg["results"]["info"]["timestamp"]))
         cv2.imwrite(save_path,msg["image"])
+        self.logger.info("保存消息成功")
+
 
     def run(self):
         while True:

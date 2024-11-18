@@ -186,7 +186,7 @@ class YoloV5TritonDetector:
                 # Add the class ID, score, and box coordinates to the respective lists
                 class_ids.append(class_id)
                 scores.append(max_score)
-                boxes.append([left, top, width, height])
+                boxes.append([left, top, left+width, top+height])
 
         # Apply non-maximum suppression to filter out overlapping bounding boxes
         indices = cv2.dnn.NMSBoxes(boxes, scores, self.confidence_thres, self.iou_thres)
@@ -221,13 +221,13 @@ class YoloV5TritonDetector:
         """
         for box, score, class_id in zip(bboxs, scores, class_ids):
             # Extract the coordinates of the bounding box
-            x1, y1, w, h = box
+            x1, y1, x2, y2 = box
 
             # Retrieve the color for the class ID
             color = self.color_palette.palette[class_id]
 
             # Draw the bounding box on the image
-            cv2.rectangle(img, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), color, 2)
+            cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
 
             # Create the label text with class name and score
             label = f'{self.classes[class_id]}: {score:.2f}'

@@ -27,3 +27,4 @@ class WarnLogic:
         return warnFlag
     def clearState(self):
         self.state.clear()
+

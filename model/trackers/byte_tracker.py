@@ -247,7 +247,10 @@ class BYTETracker:
         scores = results["conf"]
         bboxes = results["xyxy"]
         # Add index
-        bboxes = np.concatenate([bboxes, np.arange(len(bboxes)).reshape(-1, 1)], axis=-1)
+        if len(bboxes) == 0:
+            bboxes = np.concatenate([bboxes.reshape(0, 1), np.arange(len(bboxes)).reshape(-1, 1)], axis=-1)
+        else:
+            bboxes = np.concatenate([bboxes, np.arange(len(bboxes)).reshape(-1, 1)], axis=-1)
         cls = results["cls"]
 
         remain_inds = scores > self.args["track_high_thresh"]

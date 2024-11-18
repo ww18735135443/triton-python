@@ -3,7 +3,8 @@ from algrithom.tool.common import read_areas
 from algrithom.tool.logic import WarnLogic
 from algrithom.tool.logger import get_logger
 from algrithom.tool.msgApp import msgApp
-from model.model_infer.yolov5det_triton_infer import YoloV5TritonDetector
+from algrithom.tool.mytracks import Tracks
+from model.model_infer.yolov8seg_triton_infer  import YoloV8segTritonDetector
 from model.model_infer.tools.parser import get_config
 from algrithom.tool.draw import draw_areas,draw_detections
 from shapely.geometry import Polygon,Point,LineString
@@ -33,6 +34,7 @@ class AlgrithmLogic:
             self.Logic = self.logicInit()
             self.areas = read_areas(taskparam.areas)
             self._initialized = True  # 标记为已初始化
+            self.tracks=Tracks()
     def logicInit(self):
         logic = WarnLogic(self.warnConfig.alarm_last,self.warnConfig.alarm_interval,
                           self.warnConfig.abnormalPercent);
@@ -42,40 +44,63 @@ class AlgrithmLogic:
         warnFlag=0
         warnFlag = Logic.update(detect, timestamp)
         return warnFlag
-    def run(self,detections,timestamp):
+    def run(self,timestamp):
         '''
         detections:[[x,y,x,y,track_id,conf,cls]] or [[x,y,x,y,conf,cls]]
         '''
         #检测类别存在性判断
         warn_object=[]
-        if len(detections)<1:
+        if len(self.tracks.tracks)<1:
             return 0,[]
-        for detection in detections:
-            cls=detection['cls']
+        for track in self.tracks.tracks:
+            warnFlag=0
+            cls=track.classes
             if cls in self.warnConfig.alarm_classes:
+                if track.alarm_state and timestamp-track.alarm_time<self.Logic.warnInterval:
+                    continue
                 #区域位置判断
                 if len(self.areas)>0:
                     for i, area in enumerate(self.areas):
-                        cur_xyxy=detection["xyxy"]
+                        cur_xyxy=track.current_xyxy
                         cur_bottom_center=Point((cur_xyxy[0] + cur_xyxy[2]) / 2, cur_xyxy[3])
                         if area.polygon.contains(cur_bottom_center):
-                            warn_object.append(detection)
+                            # warn_object.append([track.current_xyxy,track.classes,track.track_id,area.region_index])
+                            warnFlag=1
                 else:
-                    warn_object.append(detection)
+                    warnFlag=1
+            if warnFlag:
+                warn_detection={}
+                warn_detection['xyxy']=track.current_xyxy
+                warn_detection['cls']=track.classes
+                warn_detection['track_id']=track.track_id
+                warn_detection['conf']=track.conf
+                warn_detection['region_index']=area.region_index
+                track.alarm_state=True
+                track.alarm_time=timestamp
+                warn_object.append(warn_detection)
         frameFlag=1 if len(warn_object)>0 else 0
-        warnFlag=self.algorithmLogic(frameFlag,timestamp)
-        return warnFlag,warn_object
+        return frameFlag,warn_object
 
 TRACKER_MAP = {'bytetrack': BYTETracker, 'botsort': BOTSORT}
 
-def trace_data_preprocess(boxes,scores,cls):
-    detections = {
-        'xyxy': np.array(boxes),  # 边界框坐标
-        'conf': np.array(scores),  # 置信度
-        'cls': np.array(cls),  # 类别ID
-        # 这里可以添加YOLOv8特有的其他字段，如果需要的话
-    }
+def trace_data_preprocess(detections):
+    if len(detections)==0:
+        detections = {
+            'xyxy': np.array([]),  # 边界框坐标
+            'conf': np.array([]),  # 置信度
+            'cls': np.array([]),  # 类别ID
+            # 这里可以添加YOLOv8特有的其他字段，如果需要的话
+        }
+    else:
+        detections = {
+            'xyxy': np.array(detections[:,:4]),  # 边界框坐标
+            'conf': np.array(detections[:,4]),  # 置信度
+            'cls': np.array(detections[:,5]),  # 类别ID
+            # 这里可以添加YOLOv8特有的其他字段，如果需要的话
+        }
     return detections
+
+
 
 def trace_data_postprocess(results,model_cls_list):
     detections=[]
@@ -117,7 +142,7 @@ def result_process(warn_detect,frame,param,warn_flag,timestamp):
     msg["image"]=frame
     msg["warnflag"]=warn_flag
     return msg
-class YanhuoAlgThread(threading.Thread):
+class VasAlgThread(threading.Thread):
     def __init__(self,param):
         threading.Thread.__init__(self)
         self.param = param
@@ -148,16 +173,16 @@ class YanhuoAlgThread(threading.Thread):
             # self.msgapp.save_path=os.path.join(param['save']['path'],param['topic'])
             self.save_path=os.path.join(param['save']['path'],param['topic'])
             self.msgapp.register_callback(self.savemsg)
-        self.detector =YoloV5TritonDetector(param.model_name,self.detect_cfg)
-        self.logger.info('检测模型加载成功')
+        self.detector =YoloV8segTritonDetector(param.model_name,self.detect_cfg)
+        self.logger.info('模型加载成功')
         self.trackmodel = TRACKER_MAP[param["trackerType"]](self.tracker_cfg,frame_rate=30)
-        self.logger.info('烟火检测算法线程初始化成功！')
+        self.logger.info('入侵检测算法线程初始化成功！')
         self.logic=AlgrithmLogic(self.alarm_config)
         targets = [self.run]
         for target in targets:
             curThread = threading.Thread(target=target, args=(), daemon=True)
             curThread.start()
-        self.logger.info('烟火检测算法线程启动成功')
+        self.logger.info('入侵检测算法线程启动成功')
     def sendkafkamsg(self,msg):
         if self.msgapp.kafka_send:
             msg["image"]=base64.b64encode(msg["image"]).decode('utf-8')
@@ -167,38 +192,41 @@ class YanhuoAlgThread(threading.Thread):
 
             future = self.msgapp.producer.send(topic_name, msg)
             # 尝试获取发送结果，同时处理可能的异常
+            try:
+                # 等待消息发送完成（或直到超时），这里假设超时时间为60秒
+                result = future.get(timeout=10)
+                self.logger.info(f'Message sent to {result.topic} [{result.partition}] offset {result.offset}')
+                self.logger.info("发送kafka消息成功")
+            except Exception as e:
+                # 处理发送过程中出现的异常
+                self.logger.info(f'Failed to send message: {e}')
         else:
             self.logger.info('kafka server can not use')
-        try:
-            # 等待消息发送完成（或直到超时），这里假设超时时间为60秒
-            result = future.get(timeout=10)
-            self.logger.info(f'Message sent to {result.topic} [{result.partition}] offset {result.offset}')
-        except Exception as e:
-            # 处理发送过程中出现的异常
-            self.logger.info(f'Failed to send message: {e}')
-        self.logger.info("发送消息成功")
+
+
     def savemsg(self,msg):
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
         save_path=os.path.join(self.save_path,'{}.jpg'.format(msg["results"]["info"]["timestamp"]))
         cv2.imwrite(save_path,msg["image"])
+        self.logger.info("保存消息成功")
+
 
     def run(self):
         while True:
             content = self.queue.get()
             frame = content['picture']
             timestamp = content['timestamp']
-            # imagepath = '/home/ww/work/project/triton_project/4.jpg'
-            # frame = cv2.imread(imagepath)
-            boxes,scores,cls = self.detector(frame)
-            detections=trace_data_preprocess(boxes,scores,cls)
+            detections, segments, masks= self.detector(frame)
+            detections=trace_data_preprocess(detections)
             track_result=self.trackmodel.update(detections)
             track_result=trace_data_postprocess(track_result,self.model_cls)
-            # print(track_result)
+            self.logic.tracks.update(track_result)
 
-            warn_flag, warn_object = self.logic.run(track_result, timestamp)
+            warn_flag, warn_object = self.logic.run(timestamp)
             self.logger.info("warn_flag:{}, timestamp:{},warn_object:{}".format(warn_flag,timestamp,warn_object))
             if  warn_flag:
+                cv2.imwrite("/home/ww/work/project/triton_project/data/detect_data/{}.jpg".format(timestamp),frame)
                 draw_areas(frame, self.areas)  # 画区域
                 draw_detections(frame,warn_object)
                 # cv2.imshow("warn fig",frame)
