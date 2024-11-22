@@ -1,5 +1,5 @@
 interfaceId: ''
-algorithmType: 'yanhuodetect'
+algorithmType: 'smokefiredetect'
 trackerType: 'bytetrack'
 videosTask:
 #    videosId: '/home/ww/work/project/cross_line_area-master_new/cross_line_area-master_new/cross_line_area-master_new/video_data/值班室2_1218427.mp4'

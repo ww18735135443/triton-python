@@ -59,18 +59,27 @@ if __name__ == '__main__':
     picQueue = queue.Queue(maxsize=50)
     paramdic['pictureQueue'] = picQueue
 
-    if paramdic.algorithmType == 'yanhuodetect':
-        paramdic["model_name"] = 'yanhuomodel'
-        algorithm = YanhuoAlgThread
+    if paramdic.algorithmType == 'smokefiredetect':
+        paramdic["model_name"] = 'smokefiremodel'
+        algorithm = SmokefireAlgThread
     elif paramdic.algorithmType=='helmetdetect':
         paramdic["model_name"] = 'safetymodel'
         algorithm = HelmetAlgThread
+    elif paramdic.algorithmType=='safebeltdetect':
+        paramdic["model_name"] = 'wearmodel'
+        algorithm = SafebeltAlgThread
     elif paramdic.algorithmType=='vasdetect':
         paramdic["model_name"] = 'scsmodel'
         algorithm = VasAlgThread
     elif paramdic.algorithmType=='crosslinedetect':
         paramdic["model_name"] = 'scsmodel'
         algorithm = CrosslineAlgThread
+    elif paramdic.algorithmType=='mechinedetect':
+        paramdic["model_name"] = 'scsmodel'
+        algorithm = MechineAlgThread
+    elif paramdic.algorithmType=='persondetect':
+        paramdic["model_name"] = 'scsmodel'
+        algorithm = PersonAlgThread
     else:
         print('À„∑®¿‡–Õ◊÷∂Œ¥ÌŒÛ')
     resQueue = queue.Queue(maxsize=500)

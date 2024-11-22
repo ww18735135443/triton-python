@@ -50,6 +50,7 @@ class AlgrithmLogic:
         '''
         #检测类别存在性判断
         warn_object=[]
+        region_index=None
         if len(self.tracks.tracks)<1:
             return 0,[]
         for track in self.tracks.tracks:
@@ -66,6 +67,8 @@ class AlgrithmLogic:
                         if area.polygon.contains(cur_bottom_center):
                             # warn_object.append([track.current_xyxy,track.classes,track.track_id,area.region_index])
                             warnFlag=1
+                            region_index=area.region_index
+                            break
                 else:
                     warnFlag=1
             if warnFlag:
@@ -74,7 +77,7 @@ class AlgrithmLogic:
                 warn_detection['cls']=track.classes
                 warn_detection['track_id']=track.track_id
                 warn_detection['conf']=track.conf
-                warn_detection['region_index']=area.region_index
+                warn_detection['region_index']=region_index
                 track.alarm_state=True
                 track.alarm_time=timestamp
                 warn_object.append(warn_detection)

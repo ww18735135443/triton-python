@@ -32,6 +32,11 @@ model_info:
     labels: [ 'pit','fence' ]
   steelcount:
     input: 'images'
-    output0: 'output0'
+    output: 'output0'
     size: [ 640,640 ]
     labels: [ 'rebar' ]
+  wearmodel:
+    input: 'images'
+    output: 'output0'
+    size: [ 640,640 ]
+    labels: [ 'person','helmet','workwear','reflectivevest','lifejacket','belt','nohelmet' ]

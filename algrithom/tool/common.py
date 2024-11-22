@@ -1,5 +1,5 @@
 import numpy as np
-from shapely.geometry import Polygon,Point,geo
+from shapely.geometry import Polygon,LineString,geo
 
 class OneArea:
     def __init__(self, area,index):
@@ -8,7 +8,7 @@ class OneArea:
         self.polygon = Polygon(area)
         if len(self.contour) <= 2:
             raise Exception('The number of endpoints is less than three!')
-        self.count = 0  # 该区域的报警数（离线视频用，实时流不用）
+        self.count = 0  # 该区域统计数
         self.color = (85, 90, 255)
         # 记录该区域，每个报警 id 的报警时间戳（用来计算据距离上次报警的时间）
         self.alarm_time = {}
@@ -197,3 +197,48 @@ def checkLineCross(boundary_line, pre_xyxy, bbox_xyxy):
             cross = 1
 
     return cross
+def calculate_line_coverage_percentage(line_coords, boxes):
+    # 创建线段
+
+    line = LineString([(line_coords.p0[0], line_coords.p0[1]), (line_coords.p1[0], line_coords.p1[1])])
+
+    # 初始化总覆盖长度
+    total_covered_length = 0
+
+    # 遍历所有矩形框
+    for box_dict in boxes:
+        if box_dict["cls"]!="fence":
+            continue
+        box=box_dict["xyxy"]
+        # 创建矩形框（Polygon）
+        rect = Polygon([(box[0], box[1]), (box[0], box[3]), (box[2], box[3]), (box[2], box[1])])
+
+        # 计算线段与矩形框的交集
+        intersection = line.intersection(rect)
+
+        # 如果交集存在（且不为空），则计算长度
+        if intersection and intersection.geom_type == 'LineString':
+            total_covered_length += intersection.length
+
+            # 如果交集是多点（意味着线段与矩形框在多个点相交），则计算这些点将线段分成的各个部分
+        # 并检查每部分是否完全在矩形内
+        elif intersection and intersection.geom_type == 'MultiPoint':
+            # 将交点添加到线段的坐标列表中
+            intersection_points = list(intersection.coords)
+            # 添加线段的起点和终点到列表
+            points = [line.coords[0]] + intersection_points + [line.coords[1]]
+
+            # 遍历所有相邻的点对，检查每段是否完全在矩形内
+            for i in range(len(points) - 1):
+                segment = LineString([points[i], points[i + 1]])
+                if rect.contains(segment):
+                    total_covered_length += segment.length
+
+                    # 计算线段的总长度
+    total_line_length = line.length
+
+    # 计算并返回覆盖百分比
+    if total_line_length > 0:
+        return (total_covered_length / total_line_length) * 100
+    else:
+        return 0

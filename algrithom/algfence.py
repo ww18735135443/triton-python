@@ -1,18 +1,20 @@
 import numpy as np
-from algrithom.tool.common import read_areas
+from algrithom.tool.common import read_lines,calculate_line_coverage_percentage
 from algrithom.tool.logic import WarnLogic
 from algrithom.tool.logger import get_logger
 from algrithom.tool.msgApp import msgApp
-from model.model_infer.yolov5det_triton_infer import YoloV5TritonDetector
+from algrithom.tool.mytracks import Tracks
+from model.model_infer.yolov5det_triton_infer  import YoloV5TritonDetector
 from model.model_infer.tools.parser import get_config
-from algrithom.tool.draw import draw_areas,draw_detections
-from shapely.geometry import Polygon,Point,LineString
+from algrithom.tool.draw import draw_line_dir,draw_detections
 import threading
 import os
 from model.trackers.bot_sort import BOTSORT
 import cv2
 from model.trackers.byte_tracker import BYTETracker
 import base64
+
+
 class WarnConfig:
     def __init__(self,param):
         self.alarm_last=param["alarm_last"]
@@ -31,8 +33,9 @@ class AlgrithmLogic:
         if not self._initialized:
             self.warnConfig = WarnConfig(taskparam.config)
             self.Logic = self.logicInit()
-            self.areas = read_areas(taskparam.areas)
+            self.lines = read_lines(taskparam.lines)
             self._initialized = True  # 标记为已初始化
+            self.tracks=Tracks()
     def logicInit(self):
         logic = WarnLogic(self.warnConfig.alarm_last,self.warnConfig.alarm_interval,
                           self.warnConfig.abnormalPercent);
@@ -46,36 +49,35 @@ class AlgrithmLogic:
         '''
         detections:[[x,y,x,y,track_id,conf,cls]] or [[x,y,x,y,conf,cls]]
         '''
-        #检测类别存在性判断
         warn_object=[]
-        if len(detections)<1:
-            return 0,[]
-        for detection in detections:
-            cls=detection['cls']
-            if cls in self.warnConfig.alarm_classes:
-                #区域位置判断
-                if len(self.areas)>0:
-                    for i, area in enumerate(self.areas):
-                        cur_xyxy=detection["xyxy"]
-                        cur_bottom_center=Point((cur_xyxy[0] + cur_xyxy[2]) / 2, cur_xyxy[3])
-                        if area.polygon.contains(cur_bottom_center):
-                            warn_object.append(detection)
+        if len(self.lines)>0:
+            for detect_line in self.lines:
+                if len(detections)<1 :
+                    warn_object.append(detect_line.region_index)
                 else:
-                    warn_object.append(detection)
+                    rate = calculate_line_coverage_percentage(detect_line, detections)
+                    print(rate)
+                    if rate<50:
+                        warn_object.append(detect_line.region_index)
         frameFlag=1 if len(warn_object)>0 else 0
         warnFlag=self.algorithmLogic(frameFlag,timestamp)
         return warnFlag,warn_object
 
 TRACKER_MAP = {'bytetrack': BYTETracker, 'botsort': BOTSORT}
 
-def trace_data_preprocess(boxes,scores,cls):
-    detections = {
-        'xyxy': np.array(boxes),  # 边界框坐标
-        'conf': np.array(scores),  # 置信度
-        'cls': np.array(cls),  # 类别ID
-        # 这里可以添加YOLOv8特有的其他字段，如果需要的话
-    }
+def detect_data_preprocess(boxes,scores,cls,label):
+    detections=[]
+    for box,confidence,cls in zip(boxes,scores,cls):
+        detection = {
+            'xyxy': box,  # 边界框坐标
+            'conf': confidence,  # 置信度
+            'cls': label[int(cls)]  # 类别ID
+            # 这里可以添加YOLOv8特有的其他字段，如果需要的话
+        }
+        detections.append(detection)
     return detections
+
+
 
 def trace_data_postprocess(results,model_cls_list):
     detections=[]
@@ -117,7 +119,7 @@ def result_process(warn_detect,frame,param,warn_flag,timestamp):
     msg["image"]=frame
     msg["warnflag"]=warn_flag
     return msg
-class YanhuoAlgThread(threading.Thread):
+class FenceAlgThread(threading.Thread):
     def __init__(self,param):
         threading.Thread.__init__(self)
         self.param = param
@@ -131,7 +133,7 @@ class YanhuoAlgThread(threading.Thread):
         # self.config_path = param["configPath"]
         self.queue = param["pictureQueue"]
         self.camera_id = param["videosTask"].videosId
-        self.areas=read_areas(param["videosTask"].areas)
+        self.lines=read_lines(param["videosTask"].lines)
         self.alarm_config = param["videosTask"]
         self.detect_cfg=param['triton_cfg']
         self.tracker_cfg=param['tracker_cfg']
@@ -151,13 +153,13 @@ class YanhuoAlgThread(threading.Thread):
         self.detector =YoloV5TritonDetector(param.model_name,self.detect_cfg)
         self.logger.info('检测模型加载成功')
         self.trackmodel = TRACKER_MAP[param["trackerType"]](self.tracker_cfg,frame_rate=30)
-        self.logger.info('烟火检测算法线程初始化成功！')
+        self.logger.info('临边防护检测算法线程初始化成功！')
         self.logic=AlgrithmLogic(self.alarm_config)
         targets = [self.run]
         for target in targets:
             curThread = threading.Thread(target=target, args=(), daemon=True)
             curThread.start()
-        self.logger.info('烟火检测算法线程启动成功')
+        self.logger.info('临边防护检测算法线程启动成功')
     def sendkafkamsg(self,msg):
         if self.msgapp.kafka_send:
             msg["image"]=base64.b64encode(msg["image"]).decode('utf-8')
@@ -167,40 +169,45 @@ class YanhuoAlgThread(threading.Thread):
 
             future = self.msgapp.producer.send(topic_name, msg)
             # 尝试获取发送结果，同时处理可能的异常
+            try:
+                # 等待消息发送完成（或直到超时），这里假设超时时间为60秒
+                result = future.get(timeout=10)
+                self.logger.info(f'Message sent to {result.topic} [{result.partition}] offset {result.offset}')
+                self.logger.info("发送kafka消息成功")
+            except Exception as e:
+                # 处理发送过程中出现的异常
+                self.logger.info(f'Failed to send message: {e}')
         else:
             self.logger.info('kafka server can not use')
-        try:
-            # 等待消息发送完成（或直到超时），这里假设超时时间为60秒
-            result = future.get(timeout=10)
-            self.logger.info(f'Message sent to {result.topic} [{result.partition}] offset {result.offset}')
-        except Exception as e:
-            # 处理发送过程中出现的异常
-            self.logger.info(f'Failed to send message: {e}')
-        self.logger.info("发送消息成功")
+
+
     def savemsg(self,msg):
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
         save_path=os.path.join(self.save_path,'{}.jpg'.format(msg["results"]["info"]["timestamp"]))
         cv2.imwrite(save_path,msg["image"])
+        self.logger.info("保存消息成功")
+
 
     def run(self):
         while True:
             content = self.queue.get()
             frame = content['picture']
-            timestamp = content['timestamp']
-            # imagepath = '/home/ww/work/project/triton_project/4.jpg'
+            # imagepath = '/home/ww/work/project/triton_project/3.jpg'
             # frame = cv2.imread(imagepath)
+            timestamp = content['timestamp']
             boxes,scores,cls = self.detector(frame)
-            detections=trace_data_preprocess(boxes,scores,cls)
-            track_result=self.trackmodel.update(detections)
-            track_result=trace_data_postprocess(track_result,self.model_cls)
-            # print(track_result)
-
-            warn_flag, warn_object = self.logic.run(track_result, timestamp)
+            # detections=trace_data_preprocess(boxes,scores,cls)
+            # track_result=self.trackmodel.update(detections)
+            # track_result=trace_data_postprocess(track_result,self.model_cls)
+            detections=detect_data_preprocess(boxes,scores,cls,self.model_cls)
+            warn_flag, warn_object = self.logic.run(detections,timestamp)
             self.logger.info("warn_flag:{}, timestamp:{},warn_object:{}".format(warn_flag,timestamp,warn_object))
             if  warn_flag:
-                draw_areas(frame, self.areas)  # 画区域
-                draw_detections(frame,warn_object)
+                cv2.imwrite("/home/ww/work/project/triton_project/data/detect_data/{}.jpg".format(timestamp),frame)
+                draw_line_dir(frame, self.lines)  # 画区域
+
+                draw_detections(frame,detections)
                 # cv2.imshow("warn fig",frame)
                 # cv2.waitKey(0)
                 # cv2.destroyAllWindows()

@@ -3,7 +3,7 @@ from algrithom.tool.common import read_areas
 from algrithom.tool.logic import WarnLogic
 from algrithom.tool.logger import get_logger
 from algrithom.tool.msgApp import msgApp
-from model.model_infer.yolov5det_triton_infer import YoloV5TritonDetector
+from model.model_infer.yolov8det_triton_infer import YoloV8TritonDetector
 from model.model_infer.tools.parser import get_config
 from algrithom.tool.draw import draw_areas,draw_detections
 from shapely.geometry import Polygon,Point,LineString
@@ -148,7 +148,7 @@ class HelmetAlgThread(threading.Thread):
             # self.msgapp.save_path=os.path.join(param['save']['path'],param['topic'])
             self.save_path=os.path.join(param['save']['path'],param['topic'])
             self.msgapp.register_callback(self.savemsg)
-        self.detector =YoloV5TritonDetector(param.model_name,self.detect_cfg)
+        self.detector =YoloV8TritonDetector(param.model_name,self.detect_cfg)
         self.logger.info('检测模型加载成功')
         self.trackmodel = TRACKER_MAP[param["trackerType"]](self.tracker_cfg,frame_rate=30)
         self.logger.info('安全帽佩戴检测算法线程初始化成功！')

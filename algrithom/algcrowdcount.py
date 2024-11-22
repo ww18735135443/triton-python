@@ -38,25 +38,49 @@ class AlgrithmLogic:
                           self.warnConfig.abnormalPercent);
         return logic
     def algorithmLogic(self,detect,timestamp):
-        Logic=self.Logic
         warnFlag=0
-        warnFlag = Logic.update(detect, timestamp)
+        warnFlag = self.Logic.update(detect, timestamp)
         return warnFlag
-    def run(self,detections,statustrack,timestamp):
+    def run(self,detections,timestamp):
         '''
         detections:[[x,y,x,y,track_id,conf,cls]] or [[x,y,x,y,conf,cls]]
         '''
-
+        #检测类别存在性判断
+        warn_object=[]
         if len(detections)<1:
-            return []
+            return 0,[]
+        count=0
+        for detection in detections:
+            cls=detection['cls']
+            if cls in self.warnConfig.alarm_classes:
+                #区域位置判断
+                if len(self.areas)>0:
+                    for i, area in enumerate(self.areas):
+                        cur_xyxy=detection["xyxy"]
+                        cur_bottom_center=Point((cur_xyxy[0] + cur_xyxy[2]) / 2, cur_xyxy[3])
+                        if area.polygon.contains(cur_bottom_center):
+                            warn_object.append(detection)
+                            area.count+=1
+                            count+=1
+                else:
+                    warn_object.append(detection)
+                    count+=1
+        frameFlag=1 if len(warn_object)>0 else 0
+        warnFlag=self.algorithmLogic(frameFlag,timestamp)
+        result= {}
+        if warnFlag:
+            if len(self.areas)>0:
+                statistic_result ={"statistic_result":[{"region": area.region_index, "num": area.count} for i, area in enumerate(self.areas)]}
+            else:
+                statistic_result={"statistic_result":count}
+            result={
+                "statistic_result":statistic_result,
+                "detect_result":warn_object
+            }
+        for area in self.areas:
+            area.count=0
+        return warnFlag,result
 
-        msg = {
-            'detection_object': detections,  # 检测结果
-            'statics': statustrack.state,  # 统计结果
-            'changs_object': statustrack.object_changes,  # 类别变化
-            # 这里可以添加YOLOv8特有的其他字段，如果需要的话
-        }
-        return msg
 
 TRACKER_MAP = {'bytetrack': BYTETracker, 'botsort': BOTSORT}
 
@@ -112,72 +136,14 @@ def result_process(warn_detect,frame,param,warn_flag,timestamp):
     msg['algorithm_type']=param['algorithmType']
     msg["results"]["info"]["timestamp"]=timestamp
     msg["results"]["info"]["Event_type"]=param['videosTask']['config']['alarm_classes']
-    msg["results"]["data"]=warn_detect['detection_object']
-    msg["results"]["statitic"]=warn_detect['statics']
-    msg["results"]["new_object"]=warn_detect['changs_object']
-
+    msg["results"]["data"]=warn_detect
     # msg={}
     # msg["image"]=base64.b64encode(frame).decode('utf-8')
     msg["image"]=frame
     msg["warnflag"]=warn_flag
     return msg
-class TrackerStatus:
-    _instance = None
-    def __new__(cls, alarm_config):
-        if not cls._instance:
-            cls._instance = super(TrackerStatus, cls).__new__(cls)
-            cls._initialized = False  # 初始化一个标志位来跟踪是否已经初始化
-        return cls._instance
-    def __init__(self, alarm_config):
-        if not self._initialized:
-            self.classes = alarm_config.config.alarm_classes
-            self.state = {cls: {"count": 0, "track_ids": set()} for cls in self.classes}
-            self._initialized = True  # 标记为已初始化
-            self.areas = read_areas(alarm_config.areas)
-            self.object_changes=[]
 
-    def update(self, detections):
-        if len(detections) < 1:
-            return []
-        new_state = {cls: {"count": 0, "track_ids": set()} for cls in self.classes}
-        # 更新新状态
-        for detection in detections:
-            if "cls" in detection and detection["cls"] in self.classes:
-                if len(self.areas)>0:
-                    for i, area in enumerate(self.areas):
-                        cur_xyxy=detection["xyxy"]
-                        cur_bottom_center=Point((cur_xyxy[0] + cur_xyxy[2]) / 2, cur_xyxy[3])
-                        if area.polygon.contains(cur_bottom_center):
-                            class_name = detection["cls"]
-                            new_state[class_name]["count"] += 1
-                            if "track_id" in detection:
-                                new_state[class_name]["track_ids"].add(detection["track_id"])
-                else:
-                    class_name = detection["cls"]
-                    new_state[class_name]["count"] += 1
-                    if "track_id" in detection:
-                        new_state[class_name]["track_ids"].add(detection["track_id"])
-                # 分析变化
-        changes = []
-        for cls in self.classes:
-            old_count = self.state[cls]["count"]
-            old_ids = self.state[cls]["track_ids"]
-            new_count = new_state[cls]["count"]
-            new_ids = new_state[cls]["track_ids"]
-
-            # 检查数量变化
-            add_id=new_ids - old_ids
-            for idx in add_id:
-                change_object={}
-                change_object["cls"] =cls
-                change_object["track_id"] = idx
-                changes.append(change_object)
-        self.object_changes=changes
-        # 更新状态
-
-        self.state = new_state
-        return changes
-class MechineAlgThread(threading.Thread):
+class CrowdcountAlgThread(threading.Thread):
     def __init__(self,param):
         threading.Thread.__init__(self)
         self.param = param
@@ -211,14 +177,14 @@ class MechineAlgThread(threading.Thread):
         self.detector =YoloV8segTritonDetector(param.model_name,self.detect_cfg)
         self.logger.info('检测模型加载成功')
         self.trackmodel = TRACKER_MAP[param["trackerType"]](self.tracker_cfg,frame_rate=30)
-        self.logger.info('机械车辆识别算法线程初始化成功！')
+        self.logger.info('人群计数算法线程初始化成功！')
         self.logic=AlgrithmLogic(self.alarm_config)
-        self.statustrack=TrackerStatus(self.alarm_config)
+
         targets = [self.run]
         for target in targets:
             curThread = threading.Thread(target=target, args=(), daemon=True)
             curThread.start()
-        self.logger.info('机械车辆识别算法线程启动成功')
+        self.logger.info('人群计数算法线程启动成功')
     def sendkafkamsg(self,msg):
         if self.msgapp.kafka_send:
             msg["image"]=base64.b64encode(msg["image"]).decode('utf-8')
@@ -253,21 +219,20 @@ class MechineAlgThread(threading.Thread):
             content = self.queue.get()
             frame = content['picture']
             timestamp = content['timestamp']
-            # imagepath = '/home/ww/work/project/triton_project/157368844_23.jpg'
-            # frame = cv2.imread(imagepath)
+            imagepath = '/home/ww/work/project/triton_project/157368844_23.jpg'
+            frame = cv2.imread(imagepath)
 
             detections, segments, masks = self.detector(frame)
             detections=trace_data_preprocess(detections)
             track_result=self.trackmodel.update(detections)
             track_result=trace_data_postprocess(track_result,self.model_cls)
-            object_changes=self.statustrack.update(track_result)
-            warn_flag=1 if len(object_changes)>0 else 0
-            self.logger.info("mechine change result:{}".format(warn_flag))
+            warn_flag,warn_msg = self.logic.run(track_result, timestamp)
+            print(timestamp)
+            self.logger.info("person statistic result:{}".format(warn_msg))
             if  warn_flag:
-                warn_msg = self.logic.run(track_result,self.statustrack, timestamp)
-                self.logger.info("warn_flag:{}, timestamp:{},warn_object:{}".format(warn_flag,timestamp,warn_msg))
+                self.logger.info("warn_flag:{}, timestamp:{},warn_msg:{}".format(warn_flag,timestamp,warn_msg))
                 draw_areas(frame, self.areas)  # 画区域
-                draw_detections(frame,warn_msg['detection_object'])
+                draw_detections(frame,warn_msg['detect_result'])
                 # cv2.imshow("warn fig",frame)
                 # cv2.waitKey(0)
                 # cv2.destroyAllWindows()
