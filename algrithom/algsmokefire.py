@@ -1,8 +1,9 @@
 import numpy as np
-from algrithom.tool.common import read_areas
+from algrithom.tool.common import read_areas,ResultProcess
 from algrithom.tool.logic import WarnLogic
 from algrithom.tool.logger import get_logger
 from algrithom.tool.msgApp import msgApp
+from algrithom.tool.algthread import AlgThread
 from model.model_infer.yolov5det_triton_infer import YoloV5TritonDetector
 from model.model_infer.tools.parser import get_config
 from algrithom.tool.draw import draw_areas,draw_detections
@@ -89,35 +90,7 @@ def trace_data_postprocess(results,model_cls_list):
         }
         detections.append(detection)
     return detections
-# 定义一个回调函数
-
-def result_process(warn_detect,frame,param,warn_flag,timestamp):
-    msg={
-        "camera_address": "",
-        "interfaceId":"",
-        "algorithm_type":"", #算法类型
-        "results":{
-            "info": {
-                "timestamp": "<dateTime data>",
-                "Event_type": ""  #事件类型,未检测出类型则为None
-            },
-            "data": [] #返回检测框，置信度，类别，跟踪id，是否为触发告警目标。
-        }
-        # "image":"imgbase64"
-    }
-
-    msg['camera_address']=param['videosTask']['videosId']
-    msg['interfaceId']=param['interfaceId']
-    msg['algorithm_type']=param['algorithmType']
-    msg["results"]["info"]["timestamp"]=timestamp
-    msg["results"]["info"]["Event_type"]=param['videosTask']['config']['alarm_classes']
-    msg["results"]["data"]=warn_detect
-    # msg={}
-    # msg["image"]=base64.b64encode(frame).decode('utf-8')
-    msg["image"]=frame
-    msg["warnflag"]=warn_flag
-    return msg
-class SmokefireAlgThread(threading.Thread):
+class SmokefireAlgThread(threading.Thread,AlgThread):
     def __init__(self,param):
         threading.Thread.__init__(self)
         self.param = param
@@ -158,31 +131,6 @@ class SmokefireAlgThread(threading.Thread):
             curThread = threading.Thread(target=target, args=(), daemon=True)
             curThread.start()
         self.logger.info('烟火检测算法线程启动成功')
-    def sendkafkamsg(self,msg):
-        if self.msgapp.kafka_send:
-            msg["image"]=base64.b64encode(msg["image"]).decode('utf-8')
-            topic_name =self.param['topic']
-            # # 发送报警事件到Kafka
-            self.logger.info("开始发送消息")
-
-            future = self.msgapp.producer.send(topic_name, msg)
-            # 尝试获取发送结果，同时处理可能的异常
-        else:
-            self.logger.info('kafka server can not use')
-        try:
-            # 等待消息发送完成（或直到超时），这里假设超时时间为60秒
-            result = future.get(timeout=10)
-            self.logger.info(f'Message sent to {result.topic} [{result.partition}] offset {result.offset}')
-        except Exception as e:
-            # 处理发送过程中出现的异常
-            self.logger.info(f'Failed to send message: {e}')
-        self.logger.info("发送消息成功")
-    def savemsg(self,msg):
-        if not os.path.exists(self.save_path):
-            os.makedirs(self.save_path)
-        save_path=os.path.join(self.save_path,'{}.jpg'.format(msg["results"]["info"]["timestamp"]))
-        cv2.imwrite(save_path,msg["image"])
-
     def run(self):
         while True:
             content = self.queue.get()
@@ -204,7 +152,7 @@ class SmokefireAlgThread(threading.Thread):
                 # cv2.imshow("warn fig",frame)
                 # cv2.waitKey(0)
                 # cv2.destroyAllWindows()
-                msg = result_process(warn_object,frame, self.param,warn_flag, timestamp)
+                msg = ResultProcess.result_process(warn_object,frame, self.param,warn_flag, timestamp)
                 self.msgapp.send(msg)
 
 

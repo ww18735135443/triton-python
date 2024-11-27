@@ -242,3 +242,65 @@ def calculate_line_coverage_percentage(line_coords, boxes):
         return (total_covered_length / total_line_length) * 100
     else:
         return 0
+
+class ResultProcess:
+    def __init__(self):
+        pass
+    @staticmethod
+    def result_process(warn_detect,frame,param,warn_flag,timestamp):
+        msg={
+            "camera_address": "",
+            "interfaceId":"",
+            "algorithm_type":"", #算法类型
+            "results":{
+                "info": {
+                    "timestamp": "<dateTime data>",
+                    "Event_type": ""  #事件类型,未检测出类型则为None
+                },
+                "data": [] #返回检测框，置信度，类别，跟踪id，是否为触发告警目标。
+            }
+            # "image":"imgbase64"
+        }
+
+        msg['camera_address']=param['videosTask']['videosId']
+        msg['interfaceId']=param['interfaceId']
+        msg['algorithm_type']=param['algorithmType']
+        msg["results"]["info"]["timestamp"]=timestamp
+        msg["results"]["info"]["Event_type"]=param['videosTask']['config']['alarm_classes']
+        msg["results"]["data"]=warn_detect
+        # msg={}
+        # msg["image"]=base64.b64encode(frame).decode('utf-8')
+        msg["image"]=frame
+        msg["warnflag"]=warn_flag
+        return msg
+    @staticmethod
+    def mechine_result_process(warn_detect,frame,param,warn_flag,timestamp):
+        msg={
+            "camera_address": "",
+            "interfaceId":"",
+            "algorithm_type":"", #算法类型
+            "results":{
+                "info": {
+                    "timestamp": "<dateTime data>",
+                    "Event_type": ""  #事件类型,未检测出类型则为None
+                },
+                "data": [] #返回检测框，置信度，类别，跟踪id，是否为触发告警目标。
+            }
+            # "image":"imgbase64"
+        }
+
+        msg['camera_address']=param['videosTask']['videosId']
+        msg['interfaceId']=param['interfaceId']
+        msg['algorithm_type']=param['algorithmType']
+        msg["results"]["info"]["timestamp"]=timestamp
+        msg["results"]["info"]["Event_type"]=param['videosTask']['config']['alarm_classes']
+        msg["results"]["data"]=warn_detect['detection_object']
+        msg["results"]["statitic"]=warn_detect['statics']
+        msg["results"]["new_object"]=warn_detect['changs_object']
+
+        # msg={}
+        # msg["image"]=base64.b64encode(frame).decode('utf-8')
+        msg["image"]=frame
+        msg["warnflag"]=warn_flag
+        return msg
+

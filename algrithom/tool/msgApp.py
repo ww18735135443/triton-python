@@ -14,8 +14,10 @@ class msgApp:
 
                 self.producer = KafkaProducer(bootstrap_servers=self.bootstrap_servers,
                                           value_serializer=lambda v: json.dumps(v).encode('utf-8'),
-                                          key_serializer=lambda v: json.dumps(v).encode('utf-8'))
+                                          key_serializer=lambda v: json.dumps(v).encode('utf-8'),
+                                              max_request_size=100 * 1024 * 1024)
                 self.kafka_send=1
+                print('kafka init success')
             except Exception as e:
                 print('kafka init fail')
                 print(e)
@@ -36,5 +38,5 @@ class msgApp:
 
         print("发送消息！")
 
-        for callback in self._callbacks:
+        for callback in reversed(self._callbacks):
             callback( msg)
