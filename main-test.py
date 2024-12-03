@@ -56,7 +56,7 @@ if __name__ == '__main__':
         tracker_cfg_path='model/trackers/cfg/botsort.yaml'
     paramdic['tracker_cfg'] = load_config_from_file(tracker_cfg_path)
     url = paramdic.videosTask.videosId
-    srcQueue = queue.Queue(maxsize=30)
+    srcQueue = queue.Queue(maxsize=50)
     picQueue = queue.Queue(maxsize=50)
     paramdic['pictureQueue'] = picQueue
 

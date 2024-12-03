@@ -2,8 +2,8 @@ interfaceId: ''
 algorithmType: 'reflectivevestdetect'
 trackerType: 'bytetrack'
 videosTask:
-    videosId: '/home/ww/work/project/triton_project/data/org_videos/helmet.mp4'
-#    videosId: 'https://open.ys7.com/v3/openlive/L31261130_3_1.m3u8?expire=1761815428&id=773595032161185792&t=d04788d5a6f8c7824259ac97d60ddd49ec437cc51f50b98e23d6a409b0ea7396&ev=100'
+#    videosId: '/home/ww/work/project/triton_project/data/org_videos/helmet.mp4'
+    videosId: 'https://open.ys7.com/v3/openlive/D14915488_3_1.m3u8?expire=1763946282&id=782532481122918400&t=0e536cf99b4c5229cf4f16689431eb70654ddecbc75070d4c459c251ff7f9f55&ev=100'
 
     lines: [ ]
     areas:
@@ -22,8 +22,8 @@ videosTask:
       alarm_last: 2
       alarm_interval: 10
       alarm_classes: ['reflectivevest']
-#topic: "AI_REFLECTIVE_VEST_DETECTION"
-topic: "test-topic"
+topic: "AI_REFLECTIVE_VEST_DETECTION"
+#topic: "test-topic"
 kafka:
     kafkaIP: ['10.5.87.44:9092']
 save:

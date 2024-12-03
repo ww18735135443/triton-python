@@ -28,7 +28,7 @@ def decode(srcQueue, url):
 def vas(srcQueue, picQueue):
     cam_id = ''
     timestamp = time.time()
-    time_freq = 1 / fps*5
+    time_freq = 1 / fps
     count=0
     while True:
         count += 1
@@ -62,8 +62,11 @@ if __name__ == '__main__':
     if paramdic.algorithmType == 'smokefiredetect':
         paramdic["model_name"] = 'smokefiremodel'
         algorithm = SmokefireAlgThread
+    elif paramdic.algorithmType == 'fencedetect':
+        paramdic["model_name"] = 'fencemodel'
+        algorithm = FenceAlgThread
     elif paramdic.algorithmType=='helmetdetect':
-        paramdic["model_name"] = 'safetymodel'
+        paramdic["model_name"] = 'wearmodel'
         algorithm = HelmetAlgThread
     elif paramdic.algorithmType=='safebeltdetect':
         paramdic["model_name"] = 'wearmodel'
@@ -77,9 +80,12 @@ if __name__ == '__main__':
     elif paramdic.algorithmType=='mechinedetect':
         paramdic["model_name"] = 'scsmodel'
         algorithm = MechineAlgThread
-    elif paramdic.algorithmType=='persondetect':
+    elif paramdic.algorithmType=='crowdcountdetect':
         paramdic["model_name"] = 'scsmodel'
-        algorithm = PersonAlgThread
+        algorithm = CrowdcountAlgThread
+    elif paramdic.algorithmType=='reflectivevestdetect':
+        paramdic["model_name"] = 'wearmodel'
+        algorithm = FlectivevestAlgThread
     else:
         print('À„∑®¿‡–Õ◊÷∂Œ¥ÌŒÛ')
     resQueue = queue.Queue(maxsize=500)
