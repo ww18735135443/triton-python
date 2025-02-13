@@ -1,0 +1,31 @@
+interfaceId: ''
+algorithmType: 'smokefiredetect'
+trackerType: 'bytetrack'
+videosTask:
+#    videosId: '/home/ww/work/project/cross_line_area-master_new/cross_line_area-master_new/cross_line_area-master_new/video_data/值班室2_1218427.mp4'
+    videosId: 'https://open.ys7.com/v3/openlive/AC8525297_6_1.m3u8?expire=1761371848&id=771734521816961024&t=3ccbedd3caf55e71147627cb32170c0a140681fde3ad1defe473598f7cb2e6f9&ev=100'
+
+    lines: [ ]
+    areas:
+      - - - 159
+          - 93
+        - - 1750
+          - 45
+        - - 1807
+          - 776
+        - - 121
+          - 780
+    config:
+      fps: 5
+      alarm_last: 2
+      alarm_interval: 10
+      alarm_classes: ['fire']
+topic: "AI_FIREWORKS_DETECTION"
+kafka:
+    kafkaIP: ['10.5.56.172:9092', '10.5.56.79:9092', '10.5.56.174:9092']
+save:
+    path: "/home/ww/work/project/triton_project/data"
+commonConfig:
+  fps: 25
+  alarm_interval: 10
+  # classes: ['vehicle']

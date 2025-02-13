@@ -1,0 +1,34 @@
+interfaceId: ''
+algorithmType: 'reflectivevestdetect'
+trackerType: 'bytetrack'
+videosTask:
+#    videosId: '/home/ww/work/project/triton_project/data/org_videos/helmet.mp4'
+    videosId: 'https://open.ys7.com/v3/openlive/D14915488_3_1.m3u8?expire=1763946282&id=782532481122918400&t=0e536cf99b4c5229cf4f16689431eb70654ddecbc75070d4c459c251ff7f9f55&ev=100'
+
+    lines: [ ]
+    areas:
+      - - - 650
+          - 291
+        - - 1599
+          - 361
+        - - 1937
+          - 511
+        - - 1623
+          - 1229
+        - - 388
+          - 1167
+    config:
+      fps: 5
+      alarm_last: 2
+      alarm_interval: 10
+      alarm_classes: ['reflectivevest']
+topic: "AI_REFLECTIVE_VEST_DETECTION"
+#topic: "test-topic"
+kafka:
+    kafkaIP: ['10.5.87.44:9092']
+save:
+    path: "/home/ww/work/project/triton_project/data"
+commonConfig:
+  fps: 25
+  alarm_interval: 10
+  # classes: ['vehicle']

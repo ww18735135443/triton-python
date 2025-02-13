@@ -1,0 +1,53 @@
+url: '127.0.0.1:8001'
+model_info:
+  scsmodel:
+    input: 'images'
+    output: ['output0','output1']
+    size : [640,640]
+    labels: ["worker","excavator","loader","dumptruck","truckcrane","crawlercrane",
+            "concretemixertruck","pumptruck","trailerpump","passengervehicle","rider","boxtruck","towercrane",
+            "roller","elevator","pc","pctruck","mixer","lighttruck","dozer","forklift","steel","pipe","panel","person"]
+  fastreid:
+    input: 'images'
+    output: 'output'
+    size: [128, 256]
+    labels: 0
+
+  safetymodel:
+    input: 'images'
+    output: 'output0'
+    size: [640,640]
+    labels: ['person','mineLamp','helmet','towel','mask','workClothes','portable','belt','rescuer','card','gloves','boots','nohelmet']
+  smokefiremodel:
+    input: 'images'
+    output: 'output0'
+    size: [640,640]
+    labels: ['smoke','fire']
+  fencemodel:
+    input: 'images'
+    output: 'output0'
+    size: [ 640,640 ]
+    labels: [ 'pit','fence' ]
+  steelcount:
+    input: 'images'
+    output: 'output0'
+    size: [ 640,640 ]
+    labels: [ 'rebar' ]
+  wearmodel:
+    input: 'images'
+    output: 'output0'
+    size: [ 640,640 ]
+    labels: [ 'person','helmet','workwear','reflectivevest','lifejacket','belt','nohelmet' ]
+  antispoof-ensemble:
+    input: ['images1','images2']
+    output: ['antispoof1','antispoof2']
+    size: [80,80]
+    labels: ['fake1','live','fake2']
+  facedetectmodel:
+    input: 'input.1'
+    output: ['448','471','494','451','474','497','454','477','500']
+    size: [640,640]
+  facerecognitionmodel:
+    input: 'input.1'
+    output: ['683']
+    size: [112,112]

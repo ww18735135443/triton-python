@@ -1,0 +1,6 @@
+url: '10.5.68.13:8001'
+model_name:
+  - name: 'scsmodel'
+  - input: 'images'
+  - output: 'output0'
+  - size : (640,640)

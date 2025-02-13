@@ -1,0 +1,30 @@
+interfaceId: ''
+algorithmType: 'crowdcountdetect'
+trackerType: 'bytetrack'
+videosTask:
+    videosId: '/home/ww/work/project/triton_project/data/org_videos/helmet.mp4'
+#    videosId: 'https://open.ys7.com/v3/openlive/L31261130_3_1.m3u8?expire=1761815428&id=773595032161185792&t=d04788d5a6f8c7824259ac97d60ddd49ec437cc51f50b98e23d6a409b0ea7396&ev=100'
+
+    lines: [ ]
+    areas:
+      - - - 582
+          - 475
+        - - 1515
+          - 540
+        - - 1333
+          - 955
+        - - 490
+          - 916
+        - - 197
+          - 791
+    config:
+      fps: 5
+      alarm_last: 2
+      alarm_interval: 60
+      alarm_classes: ['worker','person']
+topic: "AI_STATISTICS_NUMBER"
+kafka:
+    kafkaIP: ['10.5.56.172:9092', '10.5.56.79:9092', '10.5.56.174:9092']
+save:
+    path: "/home/ww/work/project/triton_project/data"
+

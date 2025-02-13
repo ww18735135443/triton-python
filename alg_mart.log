@@ -1,0 +1,109 @@
+nohup: ignoring input
+ * Serving Flask app 'imgflask'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:9008
+ * Running on http://10.5.68.11:9008
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 138-040-571
+192.168.224.23 - - [20/Jan/2025 14:07:39] "POST /facecompare HTTP/1.1" 200 -
+172.23.0.2 - - [20/Jan/2025 15:21:21] "POST /facecompare HTTP/1.0" 200 -
+172.23.0.2 - - [20/Jan/2025 16:13:48] "POST /helmetdetect HTTP/1.0" 200 -
+ * Detected change in '/home/xqw/project/triton_project/task.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 138-040-571
+ * Detected change in '/home/xqw/project/triton_project/task.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 138-040-571
+ * Detected change in '/home/xqw/project/triton_project/task.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 138-040-571
+172.23.0.2 - - [21/Jan/2025 16:17:37] "POST /helmetdetect HTTP/1.0" 200 -
+ * Detected change in '/home/xqw/project/triton_project/task.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 138-040-571
+172.23.0.2 - - [24/Jan/2025 09:04:55] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [24/Jan/2025 09:31:07] "POST /facecompare HTTP/1.0" 200 -
+192.168.224.3 - - [24/Jan/2025 09:31:20] "POST /facecompare HTTP/1.1" 200 -
+172.23.0.2 - - [24/Jan/2025 10:51:52] "POST /facecompare HTTP/1.0" 200 -
+ * Detected change in '/home/xqw/project/triton_project/task.py', reloading
+'NoneType' object has no attribute 'shape'
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 138-040-571
+172.23.0.2 - - [10/Feb/2025 09:45:43] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 09:45:46] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 09:45:47] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 09:45:48] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 09:45:49] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 11:02:45] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 11:02:46] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 11:02:47] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 11:02:48] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 11:02:49] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 11:02:49] "POST /smokefiredetect HTTP/1.0" 200 -
+ * Detected change in '/home/xqw/project/triton_project/task.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 138-040-571
+ * Detected change in '/home/xqw/project/triton_project/task.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 138-040-571
+172.23.0.2 - - [10/Feb/2025 16:12:43] "POST /helmetdetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 16:13:06] "POST /safetybeltdetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 16:13:10] "POST /safetybeltdetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 16:13:12] "POST /safetybeltdetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 16:13:13] "POST /safetybeltdetect HTTP/1.0" 200 -
+172.23.0.2 - - [10/Feb/2025 16:13:14] "POST /safetybeltdetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:17] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:18] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:19] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:21] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:21] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:22] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:23] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:24] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:24] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:25] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:31] "POST /reflectivedetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:34] "POST /reflectivedetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:35] "POST /reflectivedetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:37] "POST /reflectivedetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:39] "POST /reflectivedetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:53] "POST /mechinedetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:57] "POST /mechinedetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:58] "POST /mechinedetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:53:59] "POST /mechinedetect HTTP/1.0" 200 -
+172.23.0.2 - - [11/Feb/2025 08:54:00] "POST /mechinedetect HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 08:56:20] "POST /reflectivedetect HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 08:56:25] "POST /reflectivedetect HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 08:56:27] "POST /reflectivedetect HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 10:28:51] "POST /reflectivedetect HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 10:29:21] "POST /smokefiredetect HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 10:29:36] "POST /steelcount HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 10:30:19] "POST /steelcount HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 10:30:22] "POST /steelcount HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 10:30:34] "POST /steelcount HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 10:30:41] "POST /steelcount HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 10:30:47] "POST /steelcount HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 10:31:29] "POST /fencedetect HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 10:32:14] "POST /safetybeltdetect HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 10:32:21] "POST /vasdetect HTTP/1.0" 200 -
+172.23.0.2 - - [12/Feb/2025 13:39:14] "POST /mechinedetect HTTP/1.0" 200 -
+ * Detected change in '/home/xqw/project/triton_project/task.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 138-040-571
+ * Detected change in '/home/xqw/project/triton_project/task.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 138-040-571
+172.23.0.2 - - [13/Feb/2025 08:36:06] "POST /mechinedetect HTTP/1.0" 200 -

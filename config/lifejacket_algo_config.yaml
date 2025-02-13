@@ -1,0 +1,33 @@
+interfaceId: 'interfaceIdtest'
+algorithmType: 'lifejacketdetect'
+trackerType: 'bytetrack'
+videosTask:
+#    videosId: '/home/ww/work/project/triton_project/data/org_videos/helmet.mp4'
+    videosId: 'https://open.ys7.com/v3/openlive/AC8525297_1_1.m3u8?expire=1766640971&id=793834827114618880&t=7b12a348dcec9abbcf6d93023699aead1e619d0a6c5a4308e58faad6e3a5eba2&ev=100'
+
+    lines: [ ]
+    areas:
+      - - - 650
+          - 291
+        - - 1599
+          - 361
+        - - 1937
+          - 511
+        - - 1623
+          - 1229
+        - - 388
+          - 1167
+    config:
+      fps: 5
+      alarm_last: 2
+      alarm_interval: 10
+      alarm_classes: ['lifejacket']
+topic: "AI_LIFEJACKET_DETECTION"
+
+kafka:
+    kafkaIP: ['10.5.87.44:9092']
+save:
+    path: "/home/ww/work/project/triton_project/data"
+commonConfig:
+  fps: 25
+  alarm_interval: 10

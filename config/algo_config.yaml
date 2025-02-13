@@ -1,0 +1,28 @@
+algoType: '50'
+deviceList:
+  - deviceId: '001'
+    areas: [ ]
+    lines:
+      - - - 549
+          - 573
+        - - 1206
+          - 627
+        - - 0
+          - 0
+        - - 0
+          - 0
+      - - - 1191
+          - 625
+        - - 1514
+          - 700
+        - - 1343
+          - 7114
+        - - 1406
+          - 609
+    config:
+      fps: 5
+      alarm_interval: 10
+commonConfig:
+  fps: 25
+  alarm_interval: 10
+  # classes: ['vehicle']
