@@ -7,4 +7,3 @@ from algrithom.algcrowdcount import CrowdcountAlgThread
 from algrithom.algsafebelt import SafebeltAlgThread
 from algrithom.algfence import FenceAlgThread
 from algrithom.algreflectivevest import FlectivevestAlgThread
-from algrithom.alglifejacket import LifejacketAlgThread
